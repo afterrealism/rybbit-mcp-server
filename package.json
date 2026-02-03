@@ -1,0 +1,19 @@
+{
+  "name": "rybbit-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for Rybbit Analytics API",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "rybbit-mcp-server": "./src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "keywords": ["mcp", "rybbit", "analytics"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}
