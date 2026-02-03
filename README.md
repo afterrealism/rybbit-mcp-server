@@ -9,8 +9,12 @@ An MCP (Model Context Protocol) server for interacting with the [Rybbit Analytic
 
 ## Installation
 
+No installation required! Use `npx` to run directly.
+
+Or install globally:
+
 ```bash
-npm install
+npm install -g rybbit-mcp-server
 ```
 
 ## Configuration
@@ -39,8 +43,8 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
 {
   "mcpServers": {
     "rybbit": {
-      "command": "node",
-      "args": ["/path/to/rybbit-mcp-server/src/index.js"],
+      "command": "npx",
+      "args": ["rybbit-mcp-server"],
       "env": {
         "RYBBIT_API_KEY": "your_api_key_here"
       }
@@ -55,8 +59,8 @@ For self-hosted Rybbit instances, add the `RYBBIT_URL` environment variable:
 {
   "mcpServers": {
     "rybbit": {
-      "command": "node",
-      "args": ["/path/to/rybbit-mcp-server/src/index.js"],
+      "command": "npx",
+      "args": ["rybbit-mcp-server"],
       "env": {
         "RYBBIT_API_KEY": "your_api_key_here",
         "RYBBIT_URL": "https://your-rybbit-instance.com"
@@ -74,8 +78,8 @@ Add to your Claude Code MCP settings (`~/.claude/settings.json`):
 {
   "mcpServers": {
     "rybbit": {
-      "command": "node",
-      "args": ["/path/to/rybbit-mcp-server/src/index.js"],
+      "command": "npx",
+      "args": ["rybbit-mcp-server"],
       "env": {
         "RYBBIT_API_KEY": "your_api_key_here",
         "RYBBIT_URL": "https://your-rybbit-instance.com"
@@ -88,10 +92,10 @@ Add to your Claude Code MCP settings (`~/.claude/settings.json`):
 ### Standalone
 
 ```bash
-RYBBIT_API_KEY=your_api_key npm start
+npx rybbit-mcp-server
 
-# For self-hosted instances:
-RYBBIT_API_KEY=your_api_key RYBBIT_URL=https://your-instance.com npm start
+# Or if installed globally:
+rybbit-mcp-server
 ```
 
 ## Available Tools

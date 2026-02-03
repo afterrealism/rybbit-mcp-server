@@ -1,7 +1,7 @@
 {
   "name": "rybbit-mcp-server",
   "version": "1.0.0",
-  "description": "MCP server for Rybbit Analytics API",
+  "description": "MCP server for Rybbit Analytics API - query analytics, manage sites, track events",
   "type": "module",
   "main": "src/index.js",
   "bin": {
@@ -10,9 +10,31 @@
   "scripts": {
     "start": "node src/index.js"
   },
-  "keywords": ["mcp", "rybbit", "analytics"],
-  "author": "",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "rybbit",
+    "analytics",
+    "claude",
+    "ai",
+    "llm"
+  ],
+  "author": "Mike Wall",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daikazu/rybbit-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/daikazu/rybbit-mcp-server/issues"
+  },
+  "homepage": "https://github.com/daikazu/rybbit-mcp-server#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "src"
+  ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0"
   }
