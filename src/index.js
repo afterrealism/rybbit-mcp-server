@@ -41,7 +41,7 @@ const tools = [
   // Overview Tools
   {
     name: 'rybbit_get_overview',
-    description: 'Get high-level analytics metrics for a site including sessions, pageviews, users, bounce rate, and session duration',
+    description: 'Get high-level analytics totals for a site over a date range: unique users (visitors), sessions, pageviews, pages per session, bounce rate, and average session duration. Start here for "how many users/visitors/pageviews did I get" questions.',
     inputSchema: {
       type: 'object',
       properties: { ...siteIdSchema, ...timeParamsSchema },
@@ -63,7 +63,7 @@ const tools = [
   },
   {
     name: 'rybbit_get_metric',
-    description: 'Get dimensional breakdown of metrics by a specific parameter (browser, country, pathname, etc.)',
+    description: 'Get a ranked breakdown of traffic by one dimension. Use parameter="pathname" for the top pages visited, "country"/"region"/"city" for geography, "referrer"/"utm_source" for traffic sources, "browser"/"operating_system"/"device_type" for technology. Returns each value with its session count, pageviews, and percentage.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -132,7 +132,7 @@ const tools = [
   // Events Tools
   {
     name: 'rybbit_get_events',
-    description: 'Get a paginated list of events (pageviews, custom events, and outbound clicks)',
+    description: 'Get a paginated list of individual events (pageviews, custom events, and outbound clicks) with full per-event detail — pathname, referrer, device, browser, geo, and timestamps. Use this to see the actual pages and events visitors hit.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -140,6 +140,8 @@ const tools = [
         ...timeParamsSchema,
         page: { type: 'number', description: 'Page number' },
         pageSize: { type: 'number', description: 'Results per page' },
+        sinceTimestamp: { type: 'string', description: 'Return events at or after this ISO timestamp (cursor-based pagination)' },
+        beforeTimestamp: { type: 'string', description: 'Return events before this ISO timestamp (cursor-based pagination)' },
       },
       required: ['siteId'],
     },
@@ -296,19 +298,6 @@ const tools = [
       required: ['siteId', 'goalId', 'name', 'goalType'],
     },
   },
-  {
-    name: 'rybbit_delete_goal',
-    description: 'Delete a goal permanently',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        ...siteIdSchema,
-        goalId: { type: 'string', description: 'Goal identifier' },
-      },
-      required: ['siteId', 'goalId'],
-    },
-  },
-
   // Funnels Tools
   {
     name: 'rybbit_get_funnels',
@@ -362,19 +351,6 @@ const tools = [
       required: ['siteId', 'name', 'steps'],
     },
   },
-  {
-    name: 'rybbit_delete_funnel',
-    description: 'Delete a saved funnel permanently',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        ...siteIdSchema,
-        funnelId: { type: 'string', description: 'Funnel identifier' },
-      },
-      required: ['siteId', 'funnelId'],
-    },
-  },
-
   // Performance Tools
   {
     name: 'rybbit_get_performance_overview',
@@ -505,40 +481,8 @@ const tools = [
     },
   },
   {
-    name: 'rybbit_add_organization_member',
-    description: 'Add a member to an organization',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        organizationId: { type: 'string', description: 'Organization identifier' },
-        email: { type: 'string', description: 'Email of user to add' },
-        role: { type: 'string', enum: ['owner', 'member'], description: 'Role for the new member' },
-      },
-      required: ['organizationId', 'email', 'role'],
-    },
-  },
-  {
-    name: 'rybbit_create_site',
-    description: 'Create a new site in an organization',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        organizationId: { type: 'string', description: 'Organization identifier' },
-        domain: { type: 'string', description: 'Site domain (e.g., example.com)' },
-        name: { type: 'string', description: 'Site name' },
-        public: { type: 'boolean', description: 'Make analytics public' },
-        saltUserIds: { type: 'boolean', description: 'Salt user IDs for privacy' },
-        blockBots: { type: 'boolean', description: 'Block bot traffic' },
-        sessionReplay: { type: 'boolean', description: 'Enable session replay' },
-        webVitals: { type: 'boolean', description: 'Track Web Vitals' },
-        trackErrors: { type: 'boolean', description: 'Track JavaScript errors' },
-      },
-      required: ['organizationId', 'domain', 'name'],
-    },
-  },
-  {
     name: 'rybbit_get_site',
-    description: 'Get site details and configuration',
+    description: 'Get site details and configuration (domain, privacy settings, tracking flags)',
     inputSchema: {
       type: 'object',
       properties: { ...siteIdSchema },
@@ -546,58 +490,30 @@ const tools = [
     },
   },
   {
-    name: 'rybbit_update_site',
-    description: 'Update site configuration',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        ...siteIdSchema,
-        domain: { type: 'string', description: 'Site domain' },
-        public: { type: 'boolean', description: 'Make analytics public' },
-        saltUserIds: { type: 'boolean', description: 'Salt user IDs' },
-        blockBots: { type: 'boolean', description: 'Block bots' },
-        excludedIPs: { type: 'string', description: 'JSON array of IPs to exclude' },
-        excludedCountries: { type: 'string', description: 'JSON array of country codes to exclude' },
-        sessionReplay: { type: 'boolean', description: 'Enable session replay' },
-        webVitals: { type: 'boolean', description: 'Track Web Vitals' },
-        trackErrors: { type: 'boolean', description: 'Track errors' },
-      },
-      required: ['siteId'],
-    },
-  },
-  {
-    name: 'rybbit_delete_site',
-    description: 'Delete a site permanently',
+    name: 'rybbit_get_excluded_ips',
+    description: 'Get the list of IP addresses excluded from analytics tracking for a site',
     inputSchema: {
       type: 'object',
       properties: { ...siteIdSchema },
       required: ['siteId'],
     },
   },
-
-  // Event Tracking Tool
   {
-    name: 'rybbit_track_event',
-    description: 'Send a tracking event (pageview, custom event, performance, error, or outbound link)',
+    name: 'rybbit_get_excluded_countries',
+    description: 'Get the list of country codes excluded from analytics tracking for a site',
     inputSchema: {
       type: 'object',
-      properties: {
-        siteId: { type: 'string', description: 'Site ID' },
-        type: { type: 'string', enum: ['pageview', 'custom_event', 'performance', 'outbound', 'error'], description: 'Event type' },
-        pathname: { type: 'string', description: 'Page pathname' },
-        hostname: { type: 'string', description: 'Page hostname' },
-        pageTitle: { type: 'string', description: 'Page title' },
-        referrer: { type: 'string', description: 'Referrer URL' },
-        userId: { type: 'string', description: 'User identifier' },
-        eventName: { type: 'string', description: 'Custom event name (required for custom_event type)' },
-        properties: { type: 'string', description: 'JSON string of event properties' },
-        lcp: { type: 'number', description: 'LCP metric (for performance type)' },
-        cls: { type: 'number', description: 'CLS metric (for performance type)' },
-        inp: { type: 'number', description: 'INP metric (for performance type)' },
-        fcp: { type: 'number', description: 'FCP metric (for performance type)' },
-        ttfb: { type: 'number', description: 'TTFB metric (for performance type)' },
-      },
-      required: ['siteId', 'type'],
+      properties: { ...siteIdSchema },
+      required: ['siteId'],
+    },
+  },
+  {
+    name: 'rybbit_get_private_link_config',
+    description: 'Get the read-only private share-link configuration for a site',
+    inputSchema: {
+      type: 'object',
+      properties: { ...siteIdSchema },
+      required: ['siteId'],
     },
   },
 ];
@@ -650,7 +566,7 @@ async function handleToolCall(name, args) {
 
     // Events
     case 'rybbit_get_events':
-      return client.get(`/api/sites/${siteId}/events`, { ...timeParams, page: args.page, page_size: args.pageSize });
+      return client.get(`/api/sites/${siteId}/events`, { ...timeParams, page: args.page, page_size: args.pageSize, since_timestamp: args.sinceTimestamp, before_timestamp: args.beforeTimestamp });
 
     case 'rybbit_get_event_names':
       return client.get(`/api/sites/${siteId}/events/names`, timeParams);
@@ -702,9 +618,6 @@ async function handleToolCall(name, args) {
       return client.put(`/api/sites/${siteId}/goals/${args.goalId}`, { name: args.name, goalType: args.goalType, config });
     }
 
-    case 'rybbit_delete_goal':
-      return client.delete(`/api/sites/${siteId}/goals/${args.goalId}`);
-
     // Funnels
     case 'rybbit_get_funnels':
       return client.get(`/api/sites/${siteId}/funnels`);
@@ -717,9 +630,6 @@ async function handleToolCall(name, args) {
 
     case 'rybbit_create_funnel':
       return client.post(`/api/sites/${siteId}/funnels`, { name: args.name, steps: JSON.parse(args.steps), reportId: args.reportId });
-
-    case 'rybbit_delete_funnel':
-      return client.delete(`/api/sites/${siteId}/funnels/${args.funnelId}`);
 
     // Performance
     case 'rybbit_get_performance_overview':
@@ -767,62 +677,18 @@ async function handleToolCall(name, args) {
     case 'rybbit_get_organization_members':
       return client.get(`/api/organizations/${args.organizationId}/members`);
 
-    case 'rybbit_add_organization_member':
-      return client.post(`/api/organizations/${args.organizationId}/members`, { email: args.email, role: args.role });
-
     // Sites
-    case 'rybbit_create_site':
-      return client.post(`/api/organizations/${args.organizationId}/sites`, {
-        domain: args.domain,
-        name: args.name,
-        public: args.public ?? false,
-        saltUserIds: args.saltUserIds ?? false,
-        blockBots: args.blockBots ?? true,
-        sessionReplay: args.sessionReplay ?? false,
-        webVitals: args.webVitals ?? false,
-        trackErrors: args.trackErrors ?? false,
-      });
-
     case 'rybbit_get_site':
       return client.get(`/api/sites/${siteId}`);
 
-    case 'rybbit_update_site': {
-      const config = {};
-      if (args.domain !== undefined) config.domain = args.domain;
-      if (args.public !== undefined) config.public = args.public;
-      if (args.saltUserIds !== undefined) config.saltUserIds = args.saltUserIds;
-      if (args.blockBots !== undefined) config.blockBots = args.blockBots;
-      if (args.excludedIPs !== undefined) config.excludedIPs = JSON.parse(args.excludedIPs);
-      if (args.excludedCountries !== undefined) config.excludedCountries = JSON.parse(args.excludedCountries);
-      if (args.sessionReplay !== undefined) config.sessionReplay = args.sessionReplay;
-      if (args.webVitals !== undefined) config.webVitals = args.webVitals;
-      if (args.trackErrors !== undefined) config.trackErrors = args.trackErrors;
-      return client.put(`/api/sites/${siteId}/config`, config);
-    }
+    case 'rybbit_get_excluded_ips':
+      return client.get(`/api/sites/${siteId}/excluded-ips`);
 
-    case 'rybbit_delete_site':
-      return client.delete(`/api/sites/${siteId}`);
+    case 'rybbit_get_excluded_countries':
+      return client.get(`/api/sites/${siteId}/excluded-countries`);
 
-    // Event Tracking
-    case 'rybbit_track_event': {
-      const payload = {
-        site_id: args.siteId,
-        type: args.type,
-      };
-      if (args.pathname) payload.pathname = args.pathname;
-      if (args.hostname) payload.hostname = args.hostname;
-      if (args.pageTitle) payload.page_title = args.pageTitle;
-      if (args.referrer) payload.referrer = args.referrer;
-      if (args.userId) payload.user_id = args.userId;
-      if (args.eventName) payload.event_name = args.eventName;
-      if (args.properties) payload.properties = args.properties;
-      if (args.lcp !== undefined) payload.lcp = args.lcp;
-      if (args.cls !== undefined) payload.cls = args.cls;
-      if (args.inp !== undefined) payload.inp = args.inp;
-      if (args.fcp !== undefined) payload.fcp = args.fcp;
-      if (args.ttfb !== undefined) payload.ttfb = args.ttfb;
-      return client.post('/api/track', payload);
-    }
+    case 'rybbit_get_private_link_config':
+      return client.get(`/api/sites/${siteId}/private-link-config`);
 
     default:
       throw new Error(`Unknown tool: ${name}`);

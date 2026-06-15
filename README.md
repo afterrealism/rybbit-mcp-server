@@ -5,7 +5,9 @@
 
 # Rybbit MCP Server
 
-An MCP (Model Context Protocol) server for interacting with the [Rybbit Analytics](https://rybbit.com) API. This server provides tools for querying analytics data, managing sites, tracking events, and more.
+An MCP (Model Context Protocol) server for the [Rybbit Analytics](https://rybbit.com) API. It gives Claude read access to your analytics — traffic, sessions, events, users, goals, funnels, performance, and errors — so you can ask things like *"how many people visited last week and what pages did they view?"* in plain English and get a detailed answer.
+
+This server is **analytics-focused and non-destructive**: it cannot delete anything (no deleting sites, goals, or funnels) and does not send tracking events. The only write operations it exposes are creating/updating goals and funnels.
 
 ## Installation
 
@@ -128,14 +130,12 @@ rybbit-mcp-server
 - `rybbit_get_goal_sessions` - Get sessions that completed a goal
 - `rybbit_create_goal` - Create a new goal (path or event-based)
 - `rybbit_update_goal` - Update goal configuration
-- `rybbit_delete_goal` - Delete a goal
 
 ### Funnels
 - `rybbit_get_funnels` - Get saved funnels
 - `rybbit_analyze_funnel` - Analyze step-by-step conversion
 - `rybbit_get_funnel_step_sessions` - Get sessions at a funnel step
 - `rybbit_create_funnel` - Create a new funnel
-- `rybbit_delete_funnel` - Delete a funnel
 
 ### Performance (Core Web Vitals)
 - `rybbit_get_performance_overview` - Get LCP, CLS, INP, FCP, TTFB metrics
@@ -152,16 +152,48 @@ rybbit-mcp-server
 - `rybbit_get_journeys` - Get common user navigation paths
 
 ### Organizations & Sites
-- `rybbit_get_organizations` - Get your organizations
+- `rybbit_get_organizations` - Get your organizations (includes their sites and members)
 - `rybbit_get_organization_members` - Get organization members
-- `rybbit_add_organization_member` - Add a member to an organization
-- `rybbit_create_site` - Create a new site
-- `rybbit_get_site` - Get site details
-- `rybbit_update_site` - Update site configuration
-- `rybbit_delete_site` - Delete a site
+- `rybbit_get_site` - Get site details and configuration
+- `rybbit_get_excluded_ips` - Get IPs excluded from tracking
+- `rybbit_get_excluded_countries` - Get countries excluded from tracking
+- `rybbit_get_private_link_config` - Get the private share-link configuration
 
-### Event Tracking
-- `rybbit_track_event` - Send tracking events (pageview, custom, performance, error, outbound)
+## Example questions for Claude
+
+Once configured, ask Claude in plain English — it picks the right tool(s) and combines the results. Common patterns:
+
+| You ask… | Claude uses |
+|----------|-------------|
+| "How many people visited last week, and what pages did they view?" | `rybbit_get_overview` (totals) + `rybbit_get_metric` with `parameter: "pathname"` (top pages) |
+| "Show the daily traffic trend this month" | `rybbit_get_overview_timeseries` with `bucket: "day"` |
+| "Where is my traffic coming from?" | `rybbit_get_metric` with `parameter: "referrer"` (or `utm_source`, `country`, `channel`) |
+| "Who are my most active users, and what did they do?" | `rybbit_get_users` (sorted) → `rybbit_get_user_sessions` → `rybbit_get_session_details` |
+| "Trace one visitor's journey" | `rybbit_get_session_details` (every page/event in a session) |
+| "How many people are on the site right now?" | `rybbit_get_live_visitors` |
+| "Is the site healthy?" | `rybbit_get_performance_overview` (Core Web Vitals) + `rybbit_get_error_names` |
+| "How is my signup funnel converting?" | `rybbit_analyze_funnel` (or `rybbit_get_funnels` to list saved ones) |
+| "What are the most common paths through my site?" | `rybbit_get_journeys` |
+| "Are users coming back?" | `rybbit_get_retention` |
+
+> **Finding your `siteId`:** every analytics tool needs one. If you don't know it, ask Claude to *"list my Rybbit organizations"* (`rybbit_get_organizations`) — the response includes each site and its ID.
+
+### Worked example
+
+> **You:** "How many visitors did my site (ID 1) get from June 1–7, and what were the top 5 pages?"
+
+Claude makes two calls and combines them into one answer:
+
+```json
+{ "name": "rybbit_get_overview",
+  "arguments": { "siteId": "1", "startDate": "2026-06-01", "endDate": "2026-06-07" } }
+
+{ "name": "rybbit_get_metric",
+  "arguments": { "siteId": "1", "parameter": "pathname",
+                 "startDate": "2026-06-01", "endDate": "2026-06-07", "limit": 5 } }
+```
+
+> **Claude:** "From June 1–7 your site had **1,240 visitors** across 1,800 sessions and 5,400 pageviews (42% bounce rate). The most-viewed pages were `/` (2,100 views), `/pricing` (820), `/blog` (610), `/docs` (430), and `/signup` (310)."
 
 ## Common Parameters
 

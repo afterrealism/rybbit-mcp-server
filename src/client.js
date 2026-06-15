@@ -69,10 +69,6 @@ export class RybbitClient {
   put(path, body) {
     return this.request('PUT', path, { body });
   }
-
-  delete(path) {
-    return this.request('DELETE', path);
-  }
 }
 
 /**
